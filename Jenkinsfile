@@ -19,13 +19,13 @@ pipeline {
                     def ec2User = 'ubuntu'
                     def sshKeyId = ''
 
-                    if (env.BRANCH_NAME == 'dev') {
+                    if (env.GIT_BRANCH == 'dev') {
                         ec2Host = '18.221.132.15'
                         sshKeyId = 'dev-sshkey'
-                    } else if (env.BRANCH_NAME == 'stage') {
+                    } else if (env.GIT_BRANCH == 'stage') {
                         ec2Host = '3.14.150.131'
                         sshKeyId = 'stage-sshkey'
-                    } else if (env.BRANCH_NAME == 'main') {
+                    } else if (env.GIT_BRANCH == 'main') {
                         ec2Host = '18.222.129.198'
                         sshKeyId = 'prod-sshkey'
                     } else {
