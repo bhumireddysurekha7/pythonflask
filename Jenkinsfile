@@ -32,7 +32,7 @@ pipeline {
                             source venv/bin/activate
                             pip install -r requirements.txt
                             pkill -f "flask run" || true
-                            nohup flask run --host=0.0.0.0 --port=5000 &
+                            nohup flask --app=admin.py run --host=0.0.0.0 --port=5000 &
                         EOF
                         """
                     }
