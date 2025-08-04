@@ -8,11 +8,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                checkout([
-                    $class: 'GitSCM',
-                    branches: [[name: "*/${env.BRANCH_NAME}"]],
-                    userRemoteConfigs: [[url: 'https://github.com/bhumireddysurekha7/pythonflask.git']]
-                ])
+                checkout(git branch: "dev", url: 'https://github.com/bhumireddysurekha7/pythonflask.git)
             }
         }
 
