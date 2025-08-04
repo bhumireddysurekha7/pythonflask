@@ -27,6 +27,7 @@ pipeline {
                         echo "Connecting to EC2 and setting up the app"
                         ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${ec2User}@${ec2Host} << EOF
                             cd ${APP_DIR}
+			    sudo apt install python3.12-venv
                             python3 -m venv venv || true
                             source venv/bin/activate
                             pip install -r requirements.txt
