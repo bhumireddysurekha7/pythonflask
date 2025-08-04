@@ -15,26 +15,13 @@ pipeline {
         stage('Deploy to EC2') {
             steps {
                 script {
-                    def ec2Host = ''
+                    def ec2Host = '18.221.132.15'
                     def ec2User = 'ubuntu'
-                    def sshKeyId = ''
-
-                    if (env.GIT_BRANCH == 'dev') {
-                        ec2Host = '18.221.132.15'
-                        sshKeyId = 'dev-sshkey'
-                    } else if (env.GIT_BRANCH == 'stage') {
-                        ec2Host = '3.14.150.131'
-                        sshKeyId = 'stage-sshkey'
-                    } else if (env.GIT_BRANCH == 'main') {
-                        ec2Host = '18.222.129.198'
-                        sshKeyId = 'prod-sshkey'
-                    } else {
-                        error("Unsupported branch for deployment: ${env.BRANCH_NAME}")
-                    }
+                    def sshKeyId = 'dev-sshkey'
 
                     sshagent (credentials: [sshKeyId]) {
                         sh """
-                        echo "Copying code to EC2 instance for ${env.BRANCH_NAME}"
+                        echo "Copying code to EC2 instance for"
                         scp -o StrictHostKeyChecking=no -r . ${ec2User}@${ec2Host}:${APP_DIR}
 
                         echo "Connecting to EC2 and setting up the app"
