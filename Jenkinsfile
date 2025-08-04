@@ -19,13 +19,13 @@ pipeline {
                     def ec2User = 'ubuntu'
                     def sshKeyId = 'dev-sshkey'
 
-                    sshagent (credentials: [sshKeyId]) {
+                   withCredentials([sshUserPrivateKey(credentialsId: 'dev-sshkey', keyFileVariable:'SSH_KEY')]) {
                         sh """
                         echo "Copying code to EC2 instance for"
-                        scp -o StrictHostKeyChecking=no -r . ${ec2User}@${ec2Host}:${APP_DIR}
+                        scp -i $SSH_KEY -o StrictHostKeyChecking=no -r . ${ec2User}@${ec2Host}:${APP_DIR}
 
                         echo "Connecting to EC2 and setting up the app"
-                        ssh -o StrictHostKeyChecking=no ${ec2User}@${ec2Host} << EOF
+                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${ec2User}@${ec2Host} << EOF
                             cd ${APP_DIR}
                             python3 -m venv venv || true
                             source venv/bin/activate
