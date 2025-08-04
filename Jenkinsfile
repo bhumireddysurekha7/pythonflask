@@ -8,7 +8,7 @@ pipeline {
     stages {
         stage('Clone Repository') {
             steps {
-                checkout(git branch: "dev", url: 'https://github.com/bhumireddysurekha7/pythonflask.git)
+                git branch: 'dev', url: 'https://github.com/bhumireddysurekha7/pythonflask.git'
             }
         }
 
