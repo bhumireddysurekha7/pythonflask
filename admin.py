@@ -12,7 +12,7 @@ def test():
 
 @app.route('/admin')  # decorator for route(argument) function
 def hello_admin():  # binding to hello_admin call
-    return 'Hello Admin'
+    return 'Hello python admin'
 
 
 @app.route('/guest/<guest>')
