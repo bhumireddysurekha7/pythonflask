@@ -13,6 +13,7 @@ pipeline {
         EC2_USER = 'ubuntu'  // Change to your VM user
         APP_DIR = '/home/ubuntu/flask-app'
     }
+    stages {
         stage('Deploy') {
             steps {
                 sshagent (credentials: ["${env.SSH_CREDENTIALS_ID}"]) {
