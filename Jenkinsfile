@@ -16,8 +16,6 @@ pipeline {
     stages {
         stage('Deploy') {
             steps {
-                sshagent (credentials: ["${env.SSH_CREDENTIALS_ID}"]) {
-                    script {
                         def deployHost = ''
                         
                         // Select target host based on branch
@@ -34,9 +32,12 @@ pipeline {
                             error "Unsupported branch: ${env.BRANCH_NAME}"
                         }
 
+                withCredentials([sshUserPrivateKey(credentialsId: 'dev-sshkey', keyFileVariable:'SSH_KEY')]) {
+                    script {
+
                         // Deploy script to the selected environment
                         sh """
-                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${deployHost} << EOF
+                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${EC2_USER}@${deployHost} << EOF
                             echo "Deploying to ${deployHost} from branch ${env.BRANCH_NAME}"
                             rm -rf ${APP_DIR}
                             git clone ${GIT_REPO} ${APP_DIR}
