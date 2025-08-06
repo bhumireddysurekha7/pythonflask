@@ -2,37 +2,62 @@ pipeline {
     agent any
 
     environment {
+        // Git repo and branch info
+        GIT_REPO = 'git@github.com:bhumireddysurekha7/pythonflask.git'
+
+        // Environment-specific hosts and deployment paths
+        DEV_HOST = '3.140.217.63'
+        STAGE_HOST = '3.16.169.103'
+        PROD_HOST = '18.118.14.180'
+
+        EC2_USER = 'ubuntu'  // Change to your VM user
         APP_DIR = '/home/ubuntu/flask-app'
     }
 
     stages {
-        stage('Clone Repository') {
+        stage('Checkout') {
             steps {
-                git branch: 'dev', url: 'https://github.com/bhumireddysurekha7/pythonflask.git'
+                git branch: "${env.BRANCH_NAME}", url: "${env.GIT_REPO}"
             }
         }
 
-        stage('Deploy to EC2') {
+        stage('Deploy') {
             steps {
-                script {
-                    def ec2Host = '18.221.132.15'
-                    def ec2User = 'ubuntu'
-                    def sshKeyId = 'dev-sshkey'
+                sshagent (credentials: ["${env.SSH_CREDENTIALS_ID}"]) {
+                    script {
+                        def deployHost = ''
+                        
+                        // Select target host based on branch
+                        if (env.BRANCH_NAME == 'dev') {
+                            deployHost = env.DEV_HOST
+                            SSH_CREDENTIALS_ID = 'dev-sshkey'
+                        } else if (env.BRANCH_NAME == 'stage') {
+                            deployHost = env.STAGE_HOST
+                            SSH_CREDENTIALS_ID = 'stage-sshkey'
+                        } else if (env.BRANCH_NAME == 'main') {
+                            deployHost = env.PROD_HOST
+                            SSH_CREDENTIALS_ID = 'prod-sshkey'
+                        } else {
+                            error "Unsupported branch: ${env.BRANCH_NAME}"
+                        }
 
-                   withCredentials([sshUserPrivateKey(credentialsId: 'dev-sshkey', keyFileVariable:'SSH_KEY')]) {
+                        // Deploy script to the selected environment
                         sh """
-                        echo "Copying code to EC2 instance for"
-                        scp -i $SSH_KEY -o StrictHostKeyChecking=no -r . ${ec2User}@${ec2Host}:${APP_DIR}
-
-                        echo "Connecting to EC2 and setting up the app"
-                        ssh -i $SSH_KEY -o StrictHostKeyChecking=no ${ec2User}@${ec2Host} << EOF
+                        ssh -o StrictHostKeyChecking=no ${EC2_USER}@${deployHost} << EOF
+                            echo "Deploying to ${deployHost} from branch ${env.BRANCH_NAME}"
+                            rm -rf ${APP_DIR}
+                            git clone ${GIT_REPO} ${APP_DIR}
                             cd ${APP_DIR}
-			    sudo apt install python3.12-venv
-                            python3 -m venv venv || true
+                            git checkout ${env.BRANCH_NAME}
+
+                            # Setup virtual environment and dependencies
+                            python3 -m venv venv
                             source venv/bin/activate
+                            pip install --upgrade pip
                             pip install -r requirements.txt
-                            pkill -f "flask run" || true
-                            nohup flask --app=admin.py run --host=0.0.0.0 --port=5000 &
+
+                            # Run Flask (replace with gunicorn or systemctl for prod)
+                            nohup flask run --host=0.0.0.0 --port=5000 > flask.log 2>&1 &
                         EOF
                         """
                     }
@@ -40,5 +65,15 @@ pipeline {
             }
         }
     }
+
+    post {
+        failure {
+            echo 'Deployment failed!'
+        }
+        success {
+            echo 'Deployment completed successfully.'
+        }
+    }
 }
+
 
